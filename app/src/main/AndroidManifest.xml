@@ -32,20 +32,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".call.AcceptCall">
-            <intent-filter>
-                <action android:name="android.intent.action.ANSWER" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
         <activity android:name=".call.CallActivity" />
-        <!--<receiver-->
-            <!--android:name="com.vvhoan.callsreen.PhoneListenerBroad">-->
-            <!--<intent-filter>-->
-                <!--<action android:name="android.intent.action.PHONE_STATE" />-->
-                <!--<action android:name="android.intent.action.NEW_OUTGOING_CALL" />-->
-            <!--</intent-filter>-->
-        <!--</receiver>-->
         <service android:name="com.vvhoan.callsreen.MyConnectionService"
             android:permission="android.permission.BIND_INCALL_SERVICE">
             <meta-data
