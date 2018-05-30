@@ -3,10 +3,10 @@ package com.vvhoan.callsreen.call;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
+import android.telecom.Call;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -34,16 +34,17 @@ public class CallActivity extends AppCompatActivity {
             ((TextView) findViewById(R.id.callInfo)).setText(number);
         }
         try {
-            TelephonyManager tmgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+            TelephonyManager tamar = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
             MyPhoneStateListener PhoneListener = new MyPhoneStateListener();
-            if (tmgr != null) {
-                tmgr.listen(PhoneListener, PhoneStateListener.LISTEN_CALL_STATE);
+            if (tamar != null) {
+                tamar.listen(PhoneListener, PhoneStateListener.LISTEN_CALL_STATE);
             }
         } catch (Exception e) {
             Log.e("Phone Receive Error", " " + e);
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -67,7 +68,6 @@ public class CallActivity extends AppCompatActivity {
                 finish();
             }
         });
-
     }
 
     @Override
@@ -78,10 +78,12 @@ public class CallActivity extends AppCompatActivity {
 
     class MyPhoneStateListener extends PhoneStateListener {
         public void onCallStateChanged(final int state, final String incomingNumber) {
-            Log.e("state change=[===", String.valueOf(state));
+            Log.e("state change=[===", String.valueOf(state)+incomingNumber);
+            Log.e("state change=", OnGoingCall.getCall() +"");
             switch (state)
             {
                 case 0:
+                    if(OnGoingCall.call.getState() == Call.STATE_RINGING)
                     CallActivity.this.finish();
                     break;
                 case 1:

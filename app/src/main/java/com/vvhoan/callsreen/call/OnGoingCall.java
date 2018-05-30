@@ -15,9 +15,9 @@ import timber.log.Timber;
  */
 @RequiresApi(api = Build.VERSION_CODES.M)
 public class OnGoingCall {
-    public static    BehaviorSubject<Integer> myState = BehaviorSubject.create() ;
+    public static BehaviorSubject<Integer> myState = BehaviorSubject.create() ;
     public static Call call;
-    Call.Callback callBack=new Call.Callback(){
+    static Call.Callback callBack=new Call.Callback(){
         @Override
         public void onStateChanged(Call call, int state) {
             super.onStateChanged(call, state);
@@ -26,11 +26,11 @@ public class OnGoingCall {
         }
     };
 
-    public Call getCall() {
+    public static Call getCall() {
         return call;
     }
 
-    public void setCall(Call call) {
+    public static void setCall(Call call) {
         if (OnGoingCall.call !=null){
         OnGoingCall.call.unregisterCallback(callBack);
         }
