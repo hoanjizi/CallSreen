@@ -11,6 +11,7 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.TextView;
 
 import com.vvhoan.callsreen.R;
@@ -29,6 +30,9 @@ public class CallActivity extends AppCompatActivity {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_call_activity);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+        }
         if (getIntent() != null) {
             number = getIntent().getStringExtra("string");
             ((TextView) findViewById(R.id.callInfo)).setText(number);
@@ -49,6 +53,7 @@ public class CallActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         OnGoingCall.hangup();
+        OnGoingCall.call = null;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -83,8 +88,18 @@ public class CallActivity extends AppCompatActivity {
             switch (state)
             {
                 case 0:
-                    if(OnGoingCall.call.getState() == Call.STATE_RINGING)
-                    CallActivity.this.finish();
+                    if(OnGoingCall.call != null)
+                    {
+                        if(OnGoingCall.call.getState() == Call.STATE_RINGING)
+                        {
+                            CallActivity.this.finish();
+                        }
+                        if(OnGoingCall.call.getState() == Call.STATE_DISCONNECTED){
+                            CallActivity.this.finish();
+
+                        }
+                    }
+
                     break;
                 case 1:
                     break;

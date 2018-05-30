@@ -25,6 +25,6 @@ public class MyConnectionService extends InCallService {
 
     @Override
     public void onCallRemoved(Call call) {
-        OnGoingCall.call = null;
+        OnGoingCall.call = call;
     }
 }

@@ -15,38 +15,23 @@ import timber.log.Timber;
  */
 @RequiresApi(api = Build.VERSION_CODES.M)
 public class OnGoingCall {
-    public static BehaviorSubject<Integer> myState = BehaviorSubject.create() ;
     public static Call call;
-    static Call.Callback callBack=new Call.Callback(){
-        @Override
-        public void onStateChanged(Call call, int state) {
-            super.onStateChanged(call, state);
-            Timber.d(call.toString());
-            myState.onNext(state);
-        }
-    };
 
-    public static Call getCall() {
+    static Call getCall() {
         return call;
     }
 
     public static void setCall(Call call) {
-        if (OnGoingCall.call !=null){
-        OnGoingCall.call.unregisterCallback(callBack);
-        }
-        if (call!=null){
-            call.registerCallback(callBack);
-            myState.onNext(Integer.valueOf(call.getState()));
-        }
+        if (OnGoingCall.call !=null)
         OnGoingCall.call =call;
     }
-    public static void answer(){
+    static void answer(){
         if (call!=null){
             call.answer(VideoProfile.STATE_AUDIO_ONLY);
         }
     }
 
-    public static void hangup(){
+    static void hangup(){
         if (call!=null){
             call.disconnect();
         }
