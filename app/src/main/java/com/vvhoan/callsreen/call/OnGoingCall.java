@@ -5,11 +5,6 @@ import android.support.annotation.RequiresApi;
 import android.telecom.Call;
 import android.telecom.VideoProfile;
 
-import java.util.Timer;
-
-import io.reactivex.subjects.BehaviorSubject;
-import timber.log.Timber;
-
 /**
  * Created by vvhoan on 5/29/2018.
  */
@@ -22,17 +17,18 @@ public class OnGoingCall {
     }
 
     public static void setCall(Call call) {
-        if (OnGoingCall.call !=null)
-        OnGoingCall.call =call;
+        if (OnGoingCall.call != null)
+            OnGoingCall.call = call;
     }
-    static void answer(){
-        if (call!=null){
+
+    static void answer() {
+        if (call != null) {
             call.answer(VideoProfile.STATE_AUDIO_ONLY);
         }
     }
 
-    static void hangup(){
-        if (call!=null){
+    static void hangup() {
+        if (call != null) {
             call.disconnect();
         }
     }

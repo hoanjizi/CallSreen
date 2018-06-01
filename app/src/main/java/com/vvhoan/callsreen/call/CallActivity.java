@@ -1,8 +1,11 @@
 package com.vvhoan.callsreen.call;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
+import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
@@ -25,17 +28,50 @@ import io.reactivex.disposables.CompositeDisposable;
 public class CallActivity extends AppCompatActivity {
     private String number;
     private CompositeDisposable disposables = new CompositeDisposable();
+    private Cursor cursor;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_call_activity);
+        PowerManager pm = (PowerManager) getBaseContext().getSystemService(Context.POWER_SERVICE);
+        boolean isScreenOn = false;
+        if (pm != null) {
+            isScreenOn = pm.isScreenOn();
+        }
+        if (!isScreenOn) {
+            PowerManager.WakeLock wl = null;
+            if (pm != null) {
+                wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE, "MyLock");
+            }
+            if (wl != null) {
+                wl.acquire(10000);
+            }
+            PowerManager.WakeLock wl_cpu = null;
+            if (pm != null) {
+                wl_cpu = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyCpuLock");
+            }
+
+            if (wl_cpu != null) {
+                wl_cpu.acquire(10000);
+            }
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         }
         if (getIntent() != null) {
-            number = getIntent().getStringExtra("string");
+            number = getIntent().getData().getSchemeSpecificPart();
             ((TextView) findViewById(R.id.callInfo)).setText(number);
+        }
+        cursor = getCusor();
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                if (cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)).trim().equals(number.trim())) {
+                    String e = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                    Log.e("name:::", e);
+                }
+            }
         }
         try {
             TelephonyManager tamar = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
@@ -52,6 +88,9 @@ public class CallActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (cursor != null) {
+            cursor.close();
+        }
         OnGoingCall.hangup();
         OnGoingCall.call = null;
     }
@@ -70,7 +109,7 @@ public class CallActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 OnGoingCall.hangup();
-                finish();
+                finishAndRemoveTask();
             }
         });
     }
@@ -83,23 +122,16 @@ public class CallActivity extends AppCompatActivity {
 
     class MyPhoneStateListener extends PhoneStateListener {
         public void onCallStateChanged(final int state, final String incomingNumber) {
-            Log.e("state change=[===", String.valueOf(state)+incomingNumber);
-            Log.e("state change=", OnGoingCall.getCall() +"");
-            switch (state)
-            {
+            switch (state) {
                 case 0:
-                    if(OnGoingCall.call != null)
-                    {
-                        if(OnGoingCall.call.getState() == Call.STATE_RINGING)
-                        {
-                            CallActivity.this.finish();
+                    if (OnGoingCall.call != null) {
+                        if (OnGoingCall.call.getState() == Call.STATE_RINGING) {
+                            CallActivity.this.finishAndRemoveTask();
                         }
-                        if(OnGoingCall.call.getState() == Call.STATE_DISCONNECTED){
-                            CallActivity.this.finish();
-
+                        if (OnGoingCall.call.getState() == Call.STATE_DISCONNECTED) {
+                            CallActivity.this.finishAndRemoveTask();
                         }
                     }
-
                     break;
                 case 1:
                     break;
@@ -108,6 +140,11 @@ public class CallActivity extends AppCompatActivity {
                     break;
             }
         }
+    }
+
+    private Cursor getCusor() {
+        return getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                new String[]{ContactsContract.CommonDataKinds.Phone._ID, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, ContactsContract.CommonDataKinds.Phone.NUMBER}, null, null, null);
     }
 }
 
