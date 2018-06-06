@@ -21,13 +21,13 @@ public class OnGoingCall {
             OnGoingCall.call = call;
     }
 
-    static void answer() {
+    public static void answer() {
         if (call != null) {
             call.answer(VideoProfile.STATE_AUDIO_ONLY);
         }
     }
 
-    static void hangup() {
+    public static void hangup() {
         if (call != null) {
             call.disconnect();
         }

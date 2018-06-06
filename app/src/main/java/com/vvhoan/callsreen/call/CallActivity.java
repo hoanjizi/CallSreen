@@ -2,6 +2,7 @@ package com.vvhoan.callsreen.call;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
@@ -13,27 +14,43 @@ import android.telecom.Call;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
 
 import com.vvhoan.callsreen.R;
 
-import io.reactivex.disposables.CompositeDisposable;
-
 /**
  * Created by vvhoan on 5/29/2018.
  */
 
+@SuppressWarnings("ALL")
 public class CallActivity extends AppCompatActivity {
+    private static final String TAG = "acb" ;
     private String number;
-    private CompositeDisposable disposables = new CompositeDisposable();
     private Cursor cursor;
+    private View mView;
+    private WindowManager manager;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_call_activity);
+        mView = LayoutInflater.from(this).inflate(R.layout.activity_call_activity,null);
+        final WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.TYPE_PHONE,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                PixelFormat.TRANSLUCENT
+        );
+        params.gravity = Gravity.TOP | Gravity.LEFT;
+        manager = (WindowManager) getSystemService(WINDOW_SERVICE);
+        manager.addView(mView,params);
+
+
+
         PowerManager pm = (PowerManager) getBaseContext().getSystemService(Context.POWER_SERVICE);
         boolean isScreenOn = false;
         if (pm != null) {
@@ -62,14 +79,13 @@ public class CallActivity extends AppCompatActivity {
         }
         if (getIntent() != null) {
             number = getIntent().getData().getSchemeSpecificPart();
-            ((TextView) findViewById(R.id.callInfo)).setText(number);
+            ((TextView) mView.findViewById(R.id.callInfo)).setText(number);
         }
         cursor = getCusor();
         if (cursor != null) {
             while (cursor.moveToNext()) {
                 if (cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)).trim().equals(number.trim())) {
                     String e = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-                    Log.e("name:::", e);
                 }
             }
         }
@@ -93,19 +109,22 @@ public class CallActivity extends AppCompatActivity {
         }
         OnGoingCall.hangup();
         OnGoingCall.call = null;
+        manager.removeView(mView);
+        manager = null;
+        mView = null;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onStart() {
         super.onStart();
-        findViewById(R.id.answer).setOnClickListener(new View.OnClickListener() {
+        mView.findViewById(R.id.answer).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 OnGoingCall.answer();
             }
         });
-        findViewById(R.id.hangup).setOnClickListener(new View.OnClickListener() {
+        mView.findViewById(R.id.hangup).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 OnGoingCall.hangup();
@@ -116,7 +135,6 @@ public class CallActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
-        disposables.clear();
         super.onStop();
     }
 
@@ -136,7 +154,7 @@ public class CallActivity extends AppCompatActivity {
                 case 1:
                     break;
                 case 2:
-                    (findViewById(R.id.answer)).setVisibility(View.INVISIBLE);
+                    (mView.findViewById(R.id.answer)).setVisibility(View.INVISIBLE);
                     break;
             }
         }
