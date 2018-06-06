@@ -17,6 +17,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
@@ -39,6 +40,7 @@ public class MyConnectionService extends InCallService {
     private String number;
     private CountDownTimer time;
     private int tam = 0;
+    private int phut=0;
 
     @Override
     public void onCallAdded(Call call) {
@@ -98,6 +100,12 @@ public class MyConnectionService extends InCallService {
             public void onTick(long millisUntilFinished) {
                 if(mView!=null)
                 ((TextView) mView.findViewById(R.id.time)).setText(""+(tam = tam + 1000) / 1000);
+                if(tam==60000)
+                {
+                    ++phut;
+                    ((TextView) mView.findViewById(R.id.timep)).setText(""+phut);
+                    tam=0;
+                }
             }
 
             public void onFinish() {
@@ -112,6 +120,36 @@ public class MyConnectionService extends InCallService {
         }
         light();
         updateUI(number);
+        touch(params);
+    }
+
+    private void touch(final WindowManager.LayoutParams params) {
+        mView.findViewById(R.id.container).setOnTouchListener(new View.OnTouchListener() {
+
+            private int initialX;
+            private int initialY;
+            private float initialTouchX;
+            private float initialTouchY;
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+
+                switch (motionEvent.getAction())
+                {
+                    case MotionEvent.ACTION_DOWN :
+                        initialX = params.x;
+                        initialY = params.y;
+                        initialTouchX = motionEvent.getRawX();
+                        initialTouchY = motionEvent.getRawY();
+                        return true;
+                    case MotionEvent.ACTION_MOVE :
+                        params.x = initialX + (int) (motionEvent.getRawX() - initialTouchX);
+                        params.y = initialY + (int) (motionEvent.getRawY() - initialTouchY);
+                        manager.updateViewLayout(mView,params);
+                        return true;
+                }
+                return false;
+            }
+        });
     }
 
     private void updateUI(final String number) {
